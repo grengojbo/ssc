@@ -1,0 +1,2 @@
+# ssc
+Security Systems Core
