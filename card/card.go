@@ -15,8 +15,8 @@ type Cards struct {
 	ID             int64          `orm:"column(userid);auto;pk" json:"id"`
 	PersonalNumber string         `orm:"column(badgenumber);size(20);index" json:"personal_number"`
 	Card           sql.NullString `orm:"column(Card);size(20);index;null" json:"card"`   // 3 UserInfo (Card) Card Number(Internal)
-	Name           sql.NullString `orm:"column(name);size(24);null" json:"name"`         // 2 First Name
-	Lname          sql.NullString `orm:"column(lastname);size(20);null" json:"lastname"` // 1 Last Name
+	FirstName           sql.NullString `orm:"column(name);size(24);null" json:"name"`         // 2 First Name
+	LastNname          sql.NullString `orm:"column(lastname);size(20);null" json:"lastname"` // 1 Last Name
 	Father         *user.User     `orm:"column(father_id);null;index;rel(fk)" json:"father"`
 	ChangeTime     time.Time      `orm:"auto_now;null;type(datetime)" json:"change_time"`
 	CreateTime     time.Time      `orm:"auto_now_add;null;type(datetime)" json:"create_time"`
