@@ -1,11 +1,33 @@
 package card
 
 import (
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/grengojbo/ssc/user"
 )
+
+type Cards struct {
+	ID             int64          `orm:"column(userid);auto;pk" json:"id"`
+	PersonalNumber string         `orm:"column(badgenumber);size(20);index" json:"personal_number"`
+	Card           sql.NullString `orm:"column(Card);size(20);index;null" json:"card"`   // 3 UserInfo (Card) Card Number(Internal)
+	Name           sql.NullString `orm:"column(name);size(24);null" json:"name"`         // 2 First Name
+	Lname          sql.NullString `orm:"column(lastname);size(20);null" json:"lastname"` // 1 Last Name
+	Father         *user.User     `orm:"column(father_id);null;index;rel(fk)" json:"father"`
+	ChangeTime     time.Time      `orm:"auto_now;null;type(datetime)" json:"change_time"`
+	CreateTime     time.Time      `orm:"auto_now_add;null;type(datetime)" json:"create_time"`
+	Street         sql.NullString `orm:"column(street);size(100);null" json:"street"`
+	Gender         sql.NullString `orm:"column(gender);size(2);null" json:"gender"`
+	HomeAddress    sql.NullString `orm:"column(homeaddress);size(100);null" json:"homeaddress"`
+}
+
+func (this *Cards) TableName() string {
+	return "userinfo"
+}
 
 func ValidCard(card string, pref string) (b bool, res string) {
 	p := regexp.MustCompile("^(\\d{10})$")
