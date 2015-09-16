@@ -15,19 +15,49 @@ type Cards struct {
 	ID             int64          `orm:"column(userid);auto;pk" json:"id"`
 	PersonalNumber string         `orm:"column(badgenumber);size(20);index" json:"personal_number"`
 	Card           sql.NullString `orm:"column(Card);size(20);index;null" json:"card"`   // 3 UserInfo (Card) Card Number(Internal)
-	FirstName           sql.NullString `orm:"column(name);size(24);null" json:"name"`         // 2 First Name
-	LastNname          sql.NullString `orm:"column(lastname);size(20);null" json:"lastname"` // 1 Last Name
+	FirstName      sql.NullString `orm:"column(name);size(24);null" json:"firstname"`    // 2 First Name
+	LastNname      sql.NullString `orm:"column(lastname);size(20);null" json:"lastname"` // 1 Last Name
 	Father         *user.User     `orm:"column(father_id);null;index;rel(fk)" json:"father"`
 	ChangeTime     time.Time      `orm:"auto_now;null;type(datetime)" json:"change_time"`
 	CreateTime     time.Time      `orm:"auto_now_add;null;type(datetime)" json:"create_time"`
 	Street         sql.NullString `orm:"column(street);size(100);null" json:"street"`
 	Gender         sql.NullString `orm:"column(gender);size(2);null" json:"gender"`
+	DepartmentId   *Departments   `orm:"column(defaultdeptid);null;index;rel(fk)" json:"defaultdept"`
 	HomeAddress    sql.NullString `orm:"column(homeaddress);size(100);null" json:"homeaddress"`
 }
 
 func (this *Cards) TableName() string {
 	return "userinfo"
 }
+
+func QueryCard(name string, whereStr string) string {
+	sqlQuery := map[string]string{
+		"card": "SELECT u.userid AS ID, u.badgenumber AS PersonalNumber, u.Card, u.name AS FirstName, u.lastname AS LastName, u.street AS Street, u.Gender FROM userinfo AS u WHERE u.Card = ? AND u.father_id IS NULL",
+		"noFather": `SELECT u.userid AS ID, u.badgenumber AS PersonalNumber, u.Card, u.name AS FirstName, u.lastname AS LastName, u.street AS Street, u.Gender
+									FROM userinfo AS u
+  									INNER JOIN departments AS d ON u.defaultdeptid = d.DeptID
+									WHERE u.Card = ? AND u.father_id IS NULL`,
+		"oneNoFather": `SELECT u.userid AS ID, u.badgenumber AS PersonalNumber, u.Card, u.name AS FirstName, u.lastname AS LastName,
+										u.street AS Street, u.Gender,
+										u.defaultdeptid AS DepartmentId, d.DeptName, u.father_id AS Father,
+										u.homeaddress AS HomeAddress, u.status
+									FROM userinfo AS u
+  									INNER JOIN departments AS d ON u.defaultdeptid = d.DeptID
+									WHERE u.Card = ? AND u.father_id IS NULL`,
+		"one": `SELECT u.userid AS ID, u.badgenumber AS PersonalNumber, u.Card, u.name AS FirstName, u.lastname AS LastName,
+						u.street AS Street, u.Gender, u.defaultdeptid AS DepartmentId, d.DeptName,
+  		a.last_name, a.first_name,
+  		u.father_id AS Father, u2.name, u.homeaddress AS HomeAddress, u.status
+		FROM userinfo AS u
+  		INNER JOIN departments AS d ON u.defaultdeptid = d.DeptID
+  		INNER JOIN users AS u2 ON u.father_id = u2.id
+  		INNER JOIN auth_user AS a ON u2.user_id = a.id`,
+	}
+	return sqlQuery[name]
+}
+
+// QueryCardOneNoFather = "SELECT u.userid AS ID, u.badgenumber AS PersonalNumber, u.Card, u.name AS FirstName, u.lastname AS LastName, u.father_id AS Father, u.street AS Street, u.Gender, u.defaultdeptid AS DepartmentId, u.deu.homeaddress AS HomeAddress, u.status FROM userinfo AS u WHERE Card = ? AND u.father_id IS NULL"
+// QueryCardOne = ""
 
 func ValidCard(card string, pref string) (b bool, res string) {
 	p := regexp.MustCompile("^(\\d{10})$")
